@@ -503,6 +503,46 @@ func (o *options) generateTemplate() (*template.Template, error) {
 			}
 			return levelColor.SprintFunc()(level)
 		},
+		"colorForLevel": func(level string) color.Color {
+			var levelColor *color.Color
+			switch strings.ToLower(level) {
+			case "debug":
+				levelColor = color.New(color.FgMagenta)
+			case "info":
+				levelColor = color.New(color.FgBlue)
+			case "warn":
+				levelColor = color.New(color.FgYellow)
+			case "warning":
+				levelColor = color.New(color.FgYellow)
+			case "error":
+				levelColor = color.New(color.FgRed)
+			case "dpanic":
+				levelColor = color.New(color.FgRed)
+			case "panic":
+				levelColor = color.New(color.FgRed)
+			case "fatal":
+				levelColor = color.New(color.FgCyan)
+			case "critical":
+				levelColor = color.New(color.FgCyan)
+			default:
+				levelColor = color.New(color.FgWhite)
+			}
+			return *levelColor
+		},
+		"findLevel": func(text string) string {
+			levels := "debug|info|warn|warning|error|dpanic|panic|fatal|critical"
+			levelMatcherString := fmt.Sprintf("(?i)(?:\\blevel=(?P<kvLevel>%s)\\b|\\[(?P<brLevel>%s)\\])", levels, levels)
+			levelMatcher := regexp.MustCompile(levelMatcherString)
+
+			if match := levelMatcher.FindStringSubmatch(text); len(match) > 0 {
+				if len(match[1]) > 0 {
+					return match[1]
+				}
+				return match[2]
+
+			}
+			return ""
+		},
 	}
 	template, err := template.New("log").Funcs(funs).Parse(t)
 	if err != nil {
